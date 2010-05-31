@@ -4,6 +4,7 @@ import net/[StreamSocket, ServerSocket] // for the rest
 import structs/ArrayList
 
 import Connection
+import Channel
 
 solSocket: extern(SOL_SOCKET) Int
 soReuseAddr: extern(SO_REUSEADDR) Int
@@ -16,6 +17,7 @@ __zero: extern(FD_ZERO) func(fdset: FdSet*)
 Server: class {
   listener := ServerSocket new()
   conns := ArrayList<Connection> new()
+  channels := ArrayList<Channel> new()
   
   init: func (port: Int) {
     setsockopt(listener descriptor, solSocket, soReuseAddr, 1 as Int*, Int size)
@@ -57,5 +59,12 @@ Server: class {
       "have data" println()
       conn handle()
     }
+  }
+  
+  findChannel: func (name: String) -> Channel {
+    for (channel in channels)
+      if (name toLower() == channel name toLower()) return channel
+    
+    return null
   }
 }

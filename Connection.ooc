@@ -4,6 +4,7 @@ import structs/ArrayList
 import BufferedStreamReader
 
 import Server
+import Channel
 
 Connection: class {
   server: Server
@@ -67,16 +68,37 @@ Connection: class {
         //send(":home.danopia.net 396 " + nick + " 9b-162d8c0e.east.verizon.net :is now your displayed host")
         send(":" + nick + "!a@9b-162d8c0e.east.verizon.net MODE " + nick + " +x")
 
-        send(":" + nick + "!a@9b-162d8c0e.east.verizon.net JOIN #ooc-lang")
+        //send(":" + nick + "!a@9b-162d8c0e.east.verizon.net JOIN #ooc-lang")
       
       case "USER" =>
       
-      case "PRIVMSG" =>
-        for (conn in server conns) {
-          if (conn == this) continue;
-          
-          conn send(":" + nick + "!a@9b-162d8c0e.east.verizon.net PRIVMSG " + parts[0] + " :" + parts[1])
+      case "PING" =>
+        send(":home.danopia.net PONG home.danopia.net " + parts[0])
+      
+      case "JOIN" =>
+        channel := server findChannel(parts[0])
+        
+        if (!channel) {
+          channel = Channel new(server, parts[0])
+          server channels add(channel)
         }
+        
+        channel add(this)
+      
+      case "PART" =>
+        channel := server findChannel(parts[0])
+        if (!channel) return
+        
+        if (parts size == 1)
+          channel remove(this)
+        else
+          channel remove(this, parts[1])
+      
+      case "PRIVMSG" =>
+        channel := server findChannel(parts[0])
+        if (!channel) return
+        
+        channel sendToAllExcept(":" + nick + "!a@9b-162d8c0e.east.verizon.net PRIVMSG " + parts[0] + " :" + parts[1], this)
     }
   }
   
