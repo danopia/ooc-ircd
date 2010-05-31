@@ -3,6 +3,8 @@ import net/[StreamSocket, ServerSocket] // for the rest
 
 import structs/ArrayList
 
+import Connection
+
 solSocket: extern(SOL_SOCKET) Int
 soReuseAddr: extern(SO_REUSEADDR) Int
 
@@ -13,7 +15,7 @@ __zero: extern(FD_ZERO) func(fdset: FdSet*)
 
 Server: class {
   listener := ServerSocket new()
-  sockets := ArrayList<StreamSocket> new()
+  conns := ArrayList<Connection> new()
   
   init: func (port: Int) {
     setsockopt(listener descriptor, solSocket, soReuseAddr, 1 as Int*, Int size)
@@ -33,27 +35,27 @@ Server: class {
     
     biggest := listener descriptor
     
-    for (socket in sockets) {
-      __set(socket descriptor, read_fds&)
+    for (conn in conns) {
+      __set(conn socket descriptor, read_fds&)
       
-      if (biggest < socket descriptor)
-        biggest = socket descriptor
+      if (biggest < conn socket descriptor)
+        biggest = conn socket descriptor
     }
     
     select(biggest + 1, read_fds&, null as FdSet*, null as FdSet*, tv&)
     
     if (read_fds isSet(listener descriptor)) {
       "have client" println()
-      newSock := listener accept()
-      
-      sockets add(newSock)
+      conn := Connection new(this, listener accept())
+      conns add(conn)
     }
     
-    for (socket in sockets) {
-      if (!(read_fds isSet(socket descriptor)))
+    for (conn in conns) {
+      if (!(read_fds isSet(conn socket descriptor)))
         continue
       
       "have data" println()
+      conn handle()
     }
   }
 }

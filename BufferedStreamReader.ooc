@@ -1,6 +1,6 @@
 import text/Buffer
 import io/Reader
-import net/StreamSocket
+import net/[StreamSocket, Exceptions]
 
 BufferedStreamReader: class extends Reader {
   source: StreamSocket
@@ -91,7 +91,7 @@ BufferedStreamReader: class extends Reader {
   
   
   
-  readUntil: func~Char (end: Char) -> String {
+  readUntil: func~Char2 (end: Char) -> String {
     while (!buffer contains(end)) readMore!()
     
     string := buffer substring(0, buffer indexOf(end))
@@ -99,7 +99,7 @@ BufferedStreamReader: class extends Reader {
     return string
   }
   
-  readUntil: func~String (end: String) -> String {
+  readUntil: func~String2 (end: String) -> String {
     while (!buffer contains(end)) readMore!()
     
     string := buffer substring(0, buffer indexOf(end))
