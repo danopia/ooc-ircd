@@ -46,19 +46,12 @@ Server: class {
     
     select(biggest + 1, read_fds&, null as FdSet*, null as FdSet*, tv&)
     
-    if (read_fds isSet(listener descriptor)) {
-      "have client" println()
-      conn := Connection new(this, listener accept())
-      conns add(conn)
-    }
+    if (read_fds isSet(listener descriptor))
+      conns add(Connection new(this, listener accept()))
     
-    for (conn in conns) {
-      if (!(read_fds isSet(conn socket descriptor)))
-        continue
-      
-      "have data" println()
-      conn handle()
-    }
+    for (conn in conns)
+      if (read_fds isSet(conn socket descriptor))
+        conn handle()
   }
   
   findChannel: func (name: String) -> Channel {
